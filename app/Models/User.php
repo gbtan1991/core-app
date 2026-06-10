@@ -28,6 +28,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $google_id
  * @property string|null $avatar
  * @property bool $is_active
+ * @property bool $must_change_password
  * @property int|null $invited_by
  * @property string|null $invitation_token
  * @property Carbon|null $invitation_accepted_at
@@ -59,6 +60,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         'google_id',
         'avatar',
         'is_active',
+        'must_change_password',
         'invited_by',
         'invitation_token',
         'invitation_accepted_at',
@@ -89,6 +91,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'invitation_accepted_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
         ];
     }

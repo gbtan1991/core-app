@@ -1,5 +1,5 @@
 <div>
-    {{-- Flash message (Livewire-scoped) --}}
+    {{-- Flash message --}}
     @if (session('success'))
         <div
             x-data="{ show: true }"
@@ -28,16 +28,17 @@
                     </svg>
                 </div>
                 <h3 class="text-sm font-semibold text-gray-900">No staff members yet</h3>
-                <p class="mt-1 text-sm text-gray-500">Get started by inviting your first staff member.</p>
-                <a
-                    href="{{ route('admin.staff.invite') }}"
-                    class="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700"
-                >
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Invite Staff
-                </a>
+                <p class="mt-1 text-sm text-gray-500">Add staff directly or send an email invitation.</p>
+                <div class="mt-4 flex gap-2">
+                    <a href="{{ route('admin.staff.create') }}"
+                       class="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-700">
+                        Add Staff
+                    </a>
+                    <a href="{{ route('admin.staff.invite') }}"
+                       class="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50">
+                        Send Invite
+                    </a>
+                </div>
             </div>
 
         @else
@@ -45,16 +46,19 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead>
                         <tr class="bg-gray-50">
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 whitespace-nowrap">
                                 Staff Member
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 whitespace-nowrap">
+                                Added Via
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 whitespace-nowrap">
                                 Status
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 whitespace-nowrap">
                                 Date Added
                             </th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
+                            <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-500 whitespace-nowrap">
                                 Actions
                             </th>
                         </tr>
@@ -82,9 +86,29 @@
                                     </div>
                                 </td>
 
+                                {{-- Added Via badge --}}
+                                <td class="whitespace-nowrap px-6 py-4">
+                                    @if ($member->invitation_token)
+                                        {{-- Pending invite: token exists, not yet accepted --}}
+                                        <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-semibold text-yellow-700">
+                                            Pending Invite
+                                        </span>
+                                    @elseif ($member->invitation_accepted_at)
+                                        {{-- Completed invite flow --}}
+                                        <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                                            Invite
+                                        </span>
+                                    @else
+                                        {{-- Direct add --}}
+                                        <span class="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-700">
+                                            Direct Add
+                                        </span>
+                                    @endif
+                                </td>
+
                                 {{-- Status badge --}}
                                 <td class="whitespace-nowrap px-6 py-4">
-                                    @if (! $member->invitation_accepted_at)
+                                    @if ($member->invitation_token)
                                         <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-semibold text-yellow-700">
                                             Pending
                                         </span>
@@ -107,85 +131,126 @@
                                 {{-- Actions --}}
                                 <td class="whitespace-nowrap px-6 py-4">
                                     <div
-                                        x-data="{ confirmDelete: false, confirmToggle: false }"
-                                        class="flex items-center justify-end gap-2"
+                                        x-data="{
+                                            confirmDelete: false,
+                                            confirmToggle: false,
+                                            confirmReset: false
+                                        }"
+                                        class="flex items-center justify-end gap-1"
                                     >
-                                        {{-- View detail link --}}
-                                        <a
-                                            href="{{ route('admin.staff.show', $member) }}"
-                                            class="rounded px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
-                                        >
+                                        {{-- View --}}
+                                        <a href="{{ route('admin.staff.show', $member) }}"
+                                           class="rounded px-2 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900">
                                             View
                                         </a>
 
-                                        {{-- Toggle active (only after invitation accepted) --}}
-                                        @if ($member->invitation_accepted_at)
+                                        {{-- Edit --}}
+                                        <a href="{{ route('admin.staff.edit', $member) }}"
+                                           class="rounded px-2 py-1.5 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-50 hover:text-indigo-800">
+                                            Edit
+                                        </a>
+
+                                        {{-- Toggle (only for non-pending accounts) --}}
+                                        @if (! $member->invitation_token)
                                             <button
                                                 @click="confirmToggle = true"
-                                                class="rounded px-2.5 py-1.5 text-xs font-medium transition-colors
+                                                class="rounded px-2 py-1.5 text-xs font-medium transition-colors
                                                     {{ $member->is_active
                                                         ? 'text-yellow-700 hover:bg-yellow-50'
                                                         : 'text-green-700 hover:bg-green-50' }}"
                                             >
                                                 {{ $member->is_active ? 'Deactivate' : 'Activate' }}
                                             </button>
+                                        @endif
 
-                                            {{-- Toggle confirm dialog --}}
-                                            <div
-                                                x-show="confirmToggle"
-                                                x-cloak
-                                                class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                                                @keydown.escape.window="confirmToggle = false"
+                                        {{-- Reset Password (only for active/inactive, non-pending) --}}
+                                        @if (! $member->invitation_token)
+                                            <button
+                                                @click="confirmReset = true"
+                                                class="rounded px-2 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
                                             >
-                                                <div class="absolute inset-0 bg-black/40" @click="confirmToggle = false"></div>
-                                                <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-                                                    <h3 class="text-base font-semibold text-gray-900">
-                                                        {{ $member->is_active ? 'Deactivate' : 'Activate' }} staff member?
-                                                    </h3>
-                                                    <p class="mt-2 text-sm text-gray-500">
-                                                        @if ($member->is_active)
-                                                            <strong>{{ $member->name ?: $member->email }}</strong> will no longer be able to log in.
-                                                        @else
-                                                            <strong>{{ $member->name ?: $member->email }}</strong> will regain access to the app.
-                                                        @endif
-                                                    </p>
-                                                    <div class="mt-5 flex justify-end gap-3">
-                                                        <button
-                                                            @click="confirmToggle = false"
-                                                            class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                        <button
-                                                            wire:click="toggle({{ $member->id }})"
-                                                            @click="confirmToggle = false"
-                                                            class="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors
-                                                                {{ $member->is_active
-                                                                    ? 'bg-yellow-600 hover:bg-yellow-700'
-                                                                    : 'bg-green-600 hover:bg-green-700' }}"
-                                                        >
-                                                            {{ $member->is_active ? 'Yes, deactivate' : 'Yes, activate' }}
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                                Reset PW
+                                            </button>
                                         @endif
 
                                         {{-- Delete --}}
                                         <button
                                             @click="confirmDelete = true"
-                                            class="rounded px-2.5 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
+                                            class="rounded px-2 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
                                         >
                                             Delete
                                         </button>
 
-                                        {{-- Delete confirm dialog --}}
-                                        <div
-                                            x-show="confirmDelete"
-                                            x-cloak
-                                            class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                                            @keydown.escape.window="confirmDelete = false"
-                                        >
+                                        {{-- ── Toggle confirm modal ─────────────────────────── --}}
+                                        @if (! $member->invitation_token)
+                                        <div x-show="confirmToggle" x-cloak
+                                             class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                                             @keydown.escape.window="confirmToggle = false">
+                                            <div class="absolute inset-0 bg-black/40" @click="confirmToggle = false"></div>
+                                            <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+                                                <h3 class="text-base font-semibold text-gray-900">
+                                                    {{ $member->is_active ? 'Deactivate' : 'Activate' }} staff member?
+                                                </h3>
+                                                <p class="mt-2 text-sm text-gray-500">
+                                                    @if ($member->is_active)
+                                                        <strong>{{ $member->name ?: $member->email }}</strong> will no longer be able to log in.
+                                                    @else
+                                                        <strong>{{ $member->name ?: $member->email }}</strong> will regain access to the app.
+                                                    @endif
+                                                </p>
+                                                <div class="mt-5 flex justify-end gap-3">
+                                                    <button @click="confirmToggle = false"
+                                                            class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+                                                        Cancel
+                                                    </button>
+                                                    <button wire:click="toggle({{ $member->id }})" @click="confirmToggle = false"
+                                                            class="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors
+                                                                {{ $member->is_active ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-green-600 hover:bg-green-700' }}">
+                                                        {{ $member->is_active ? 'Yes, deactivate' : 'Yes, activate' }}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endif
+
+                                        {{-- ── Reset password confirm modal ─────────────────── --}}
+                                        @if (! $member->invitation_token)
+                                        <div x-show="confirmReset" x-cloak
+                                             class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                                             @keydown.escape.window="confirmReset = false">
+                                            <div class="absolute inset-0 bg-black/40" @click="confirmReset = false"></div>
+                                            <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+                                                <div class="mb-4 flex items-center gap-3">
+                                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                                                        <svg class="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                                                        </svg>
+                                                    </div>
+                                                    <h3 class="text-base font-semibold text-gray-900">Reset password?</h3>
+                                                </div>
+                                                <p class="text-sm text-gray-500">
+                                                    A new temporary password will be emailed to
+                                                    <strong class="text-gray-900">{{ $member->name ?: $member->email }}</strong>.
+                                                    They will be required to change it on next login.
+                                                </p>
+                                                <div class="mt-5 flex justify-end gap-3">
+                                                    <button @click="confirmReset = false"
+                                                            class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+                                                        Cancel
+                                                    </button>
+                                                    <button wire:click="resetPassword({{ $member->id }})" @click="confirmReset = false"
+                                                            class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700">
+                                                        Yes, reset password
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endif
+
+                                        {{-- ── Delete confirm modal ─────────────────────────── --}}
+                                        <div x-show="confirmDelete" x-cloak
+                                             class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                                             @keydown.escape.window="confirmDelete = false">
                                             <div class="absolute inset-0 bg-black/40" @click="confirmDelete = false"></div>
                                             <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
                                                 <div class="mb-4 flex items-center gap-3">
@@ -202,17 +267,12 @@
                                                     This action cannot be undone.
                                                 </p>
                                                 <div class="mt-5 flex justify-end gap-3">
-                                                    <button
-                                                        @click="confirmDelete = false"
-                                                        class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-                                                    >
+                                                    <button @click="confirmDelete = false"
+                                                            class="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
                                                         Cancel
                                                     </button>
-                                                    <button
-                                                        wire:click="delete({{ $member->id }})"
-                                                        @click="confirmDelete = false"
-                                                        class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-                                                    >
+                                                    <button wire:click="delete({{ $member->id }})" @click="confirmDelete = false"
+                                                            class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700">
                                                         Yes, delete
                                                     </button>
                                                 </div>

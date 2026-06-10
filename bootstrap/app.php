@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Http\Middleware\SetTeamUrlDefaults;
 use Illuminate\Foundation\Application;
@@ -18,7 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
             SetTeamUrlDefaults::class,
         ]);
         $middleware->alias([
-            'active'             => EnsureUserIsActive::class,
+            'active'               => EnsureUserIsActive::class,
+            'must_change_password' => EnsurePasswordChanged::class,
             'role'               => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission'         => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
