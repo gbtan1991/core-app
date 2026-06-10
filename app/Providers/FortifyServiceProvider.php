@@ -9,8 +9,10 @@ use App\Http\Responses\PasskeyLoginResponse;
 use App\Http\Responses\RegisterResponse;
 use App\Http\Responses\TwoFactorLoginResponse;
 use App\Http\Responses\VerifyEmailResponse;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -52,6 +54,27 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+
+        // Custom authentication that also checks is_active
+        Fortify::authenticateUsing(function (Request $request) {
+            $user = User::where('email', $request->email)->first();
+
+            if (! $user || ! Hash::check($request->password, $user->password)) {
+                return null;
+            }
+
+            if (! $user->is_active) {
+                // Flash a specific error message for deactivated accounts
+                $request->session()->flash(
+                    'auth.deactivated',
+                    'Your account has been deactivated. Please contact your administrator.'
+                );
+
+                return null;
+            }
+
+            return $user;
+        });
     }
 
     /**
@@ -60,7 +83,7 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureViews(): void
     {
         Fortify::loginView(fn () => view('pages::auth.login'));
-        Fortify::verifyEmailView(fn () => view('pages::auth.verify-email'));
+        Fortify::verifyEmailView(fn () => view('auth.verify-email'));
         Fortify::twoFactorChallengeView(fn () => view('pages::auth.two-factor-challenge'));
         Fortify::confirmPasswordView(fn () => view('pages::auth.confirm-password'));
         Fortify::registerView(fn () => view('pages::auth.register'));
