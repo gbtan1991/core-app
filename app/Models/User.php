@@ -113,6 +113,14 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     }
 
     /**
+     * Contacts created by this user.
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(Contact::class, 'created_by');
+    }
+
+    /**
      * Get the user's initials.
      */
     public function initials(): string

@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\ContactController;
+use App\Http\Controllers\Admin\FunnelApiKeyController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\PasswordChangeController;
 use App\Http\Controllers\Invitation\InvitationController;
@@ -31,6 +34,31 @@ Route::middleware(['auth', 'verified', 'active'])->group(function () {
 // Admin routes (auth + verified + active + must_change_password)
 Route::middleware(['auth', 'verified', 'active', 'must_change_password'])->prefix('admin')->name('admin.')->group(function () {
     Route::view('/dashboard', 'admin.dashboard')->name('dashboard');
+
+    // CRM
+    Route::prefix('crm')->name('crm.')->group(function () {
+        // Contacts (all authenticated staff)
+        Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
+        Route::get('/contacts/create', [ContactController::class, 'create'])->name('contacts.create');
+        Route::post('/contacts', [ContactController::class, 'store'])->name('contacts.store');
+        Route::get('/contacts/{id}', [ContactController::class, 'show'])->name('contacts.show');
+        Route::get('/contacts/{id}/edit', [ContactController::class, 'edit'])->name('contacts.edit');
+        Route::patch('/contacts/{id}', [ContactController::class, 'update'])->name('contacts.update');
+        Route::delete('/contacts/{id}', [ContactController::class, 'destroy'])->name('contacts.destroy');
+
+        // Tags + Funnel Keys (super_admin only)
+        Route::middleware('role:super_admin')->group(function () {
+            Route::get('/tags', [TagController::class, 'index'])->name('tags.index');
+            Route::post('/tags', [TagController::class, 'store'])->name('tags.store');
+            Route::patch('/tags/{id}', [TagController::class, 'update'])->name('tags.update');
+            Route::delete('/tags/{id}', [TagController::class, 'destroy'])->name('tags.destroy');
+
+            Route::get('/funnel-keys', [FunnelApiKeyController::class, 'index'])->name('funnel-keys.index');
+            Route::post('/funnel-keys', [FunnelApiKeyController::class, 'store'])->name('funnel-keys.store');
+            Route::patch('/funnel-keys/{id}/toggle', [FunnelApiKeyController::class, 'toggle'])->name('funnel-keys.toggle');
+            Route::delete('/funnel-keys/{id}', [FunnelApiKeyController::class, 'destroy'])->name('funnel-keys.destroy');
+        });
+    });
 
     // Staff Management (super_admin only)
     Route::middleware('role:super_admin')->prefix('staff')->name('staff.')->group(function () {

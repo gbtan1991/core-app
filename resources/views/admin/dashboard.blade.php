@@ -55,24 +55,51 @@
         </div>
         @endrole
 
+        {{-- CRM Stats widget --}}
+        @php
+            $crmTotal = \App\Models\Contact::count();
+            $crmStages = \App\Models\Contact::selectRaw('stage, count(*) as count')->groupBy('stage')->pluck('count', 'stage');
+            $stageOrder = ['lead', 'contacted', 'qualified', 'proposal_sent', 'won', 'lost'];
+            $stageLabels = ['lead' => 'Lead', 'contacted' => 'Contacted', 'qualified' => 'Qualified', 'proposal_sent' => 'Proposal Sent', 'won' => 'Won', 'lost' => 'Lost'];
+            $stageColors = ['lead' => 'bg-gray-300', 'contacted' => 'bg-blue-400', 'qualified' => 'bg-yellow-400', 'proposal_sent' => 'bg-purple-400', 'won' => 'bg-green-400', 'lost' => 'bg-red-400'];
+        @endphp
+        <div class="rounded-2xl bg-white p-6 shadow-sm">
+            <div class="mb-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100">
+                        <svg class="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">CRM</p>
+                        <p class="text-xs text-gray-500">{{ $crmTotal }} total {{ Str::plural('contact', $crmTotal) }}</p>
+                    </div>
+                </div>
+                <a href="{{ route('admin.crm.contacts.index') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700">View All →</a>
+            </div>
+            @if ($crmTotal > 0)
+                <div class="space-y-2">
+                    @foreach ($stageOrder as $stage)
+                        @php $count = $crmStages[$stage] ?? 0; $pct = $crmTotal > 0 ? round($count / $crmTotal * 100) : 0; @endphp
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="w-24 shrink-0 text-gray-500">{{ $stageLabels[$stage] }}</span>
+                            <div class="flex-1 rounded-full bg-gray-100 h-2">
+                                <div class="h-2 rounded-full {{ $stageColors[$stage] }}" style="width: {{ $pct }}%"></div>
+                            </div>
+                            <span class="w-6 text-right text-gray-600">{{ $count }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <p class="text-sm text-gray-400">No contacts yet. <a href="{{ route('admin.crm.contacts.create') }}" class="text-indigo-600 hover:underline">Add your first contact.</a></p>
+            @endif
+        </div>
+
         {{-- Coming-soon modules --}}
         <div>
             <h3 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">Upcoming Modules</h3>
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-                {{-- CRM --}}
-                <div class="rounded-2xl border-2 border-dashed border-gray-200 bg-white p-6 shadow-sm">
-                    <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
-                        <svg class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                        </svg>
-                    </div>
-                    <h4 class="font-semibold text-gray-900">CRM</h4>
-                    <p class="mt-1 text-sm text-gray-500">Manage clients, deals, and pipelines.</p>
-                    <span class="mt-3 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">
-                        Coming soon
-                    </span>
-                </div>
 
                 {{-- Bookings --}}
                 <div class="rounded-2xl border-2 border-dashed border-gray-200 bg-white p-6 shadow-sm">
